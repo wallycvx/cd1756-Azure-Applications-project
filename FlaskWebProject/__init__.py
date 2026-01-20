@@ -10,9 +10,33 @@ from flask_session import Session
 
 app = Flask(__name__)
 app.config.from_object(Config)
-# TODO: Add any logging levels and handlers with app.logger
+
+#  Add Logging levels and handlers
+app.logger.setLevel(logging.INFO)
+
+# Console handler (works in VS Code + Azure Log Stream)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+))
+app.logger.addHandler(console_handler)
+
+# Optional: file handler for local development
+file_handler = logging.FileHandler("app.log")
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+))
+app.logger.addHandler(file_handler)
+
+app.logger.info("Flask application initialized with logging")
+
+
+# Extensions
 Session(app)
 db = SQLAlchemy(app)
+
 login = LoginManager(app)
 login.login_view = 'login'
 

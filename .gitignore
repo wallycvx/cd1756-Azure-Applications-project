@@ -1,0 +1,59 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+example_images/
+sql_scripts/
+
+# --- Environment files ---
+venv/
+venv3.10/
+.venv/
+
+
+# --- Environment variables ---
+*.env
+.env.*
+
+# --- Fask Session Files ---
+flask_session/
+instance/
+*.sqlite3
+
+# --- Azure Credentials ---
+azureProfile.json
+*.Azure
+*.pem
+*.key
+*.crt
+
+# --- Logs ---
+*.log
+logs/
+
+# --- OS/Editor junk ---
+.DS_Store
+Thumbs.db
+
+# --- VS Code ---
+.vscode/
+
+# --- Byte-compliled files/cache ---
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- PyCharm ---
+.idea/
+
+# --- DB sql scripts---
+*.lnk
+*.sql
+*.bak
+*.tmp
+.tmp.drivedownload
+~$*
