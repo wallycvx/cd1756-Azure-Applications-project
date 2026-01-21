@@ -63,4 +63,4 @@ jobs:
         with:
           app-name: 'wallyapp'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_23FF923FF14F474D980DDE15DA35CBCD }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_2261A22545A14E0C83FF5F89C6B23582 }}
