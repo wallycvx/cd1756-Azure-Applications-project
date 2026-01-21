@@ -54,9 +54,9 @@ class Config(object):
     AUTHORITY = f"https://login.microsoftonline.com/{CLIENT_ID}"  # For multi-tenant app, else put tenant name
     # AUTHORITY = "https://login.microsoftonline.com/Enter_the_Tenant_Name_Here"
 
-    REDIRECT_PATH = "https://[WEB APP ADDRESS]/getAToken"  # Used to form an absolute URL; must match to app's redirect_uri set in AAD
+    REDIRECT_PATH = "/getAToken"  # Used to form an absolute URL; must match to app's redirect_uri set in AAD
 
-    LOGOUT_URL = "https://[WEB APP ADDRESS]/login"
+    LOGOUT_URL = "/login"
 
     # You can find the proper permission names from this document
     # https://docs.microsoft.com/en-us/graph/permissions-reference
