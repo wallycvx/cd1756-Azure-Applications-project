@@ -8,6 +8,8 @@ __pycache__/
 example_images/
 sql_scripts/
 
+dbtest.py
+
 # --- Environment files ---
 venv/
 venv3.10/
