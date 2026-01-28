@@ -27,5 +27,5 @@ Less control of OS and runtime. Not suitable for apps requiring custom drivers, 
 In my case, I want a fully managed platform with minimal ops overhead. Fast autoscaling and zero-downtime deployments. CI/CD integration and modern DevOps workflows with built-in authentication, custom domains, ssl, and logging. App Service is suitable for me.
 
 
-*Detail how the app and any other needs would have to change for you to change your decision in the last section.* 
+#### *Detail how the app and any other needs would have to change for you to change your decision in the last section.* 
 If my requirements will later change to having full OS Control, running legacy or custom application hosting sensitive/personal identification data with predictable long-term running workloads on GPU or specialized hardware, then I will consider to change my application deployments to Virtual Machine.
