@@ -6,12 +6,11 @@ from os import environ
 from FlaskWebProject import app
 from config import Config
 
-    
+# For debugging, print out the database connection info
 # print("SQL_SERVER:", Config.SQL_SERVER)
 # print("SQL_DATABASE:", Config.SQL_DATABASE)
 # print("SQL_USER_NAME:", Config.SQL_USER_NAME)
 # print("SQL_PASSWORD:", Config.SQL_PASSWORD)
-
 
 if __name__ == '__main__':
     HOST = environ.get('SERVER_HOST', 'localhost')
@@ -22,4 +21,3 @@ if __name__ == '__main__':
     # app.run(HOST, PORT, ssl_context='adhoc')
 
     app.run(HOST, PORT, debug=True)
-

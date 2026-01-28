@@ -12,7 +12,6 @@ from FlaskWebProject.models import User, Post
 import msal
 import uuid
 import os
-
 # NEW: Azure Blob Storage client
 from azure.storage.blob import BlobServiceClient
 
@@ -22,7 +21,6 @@ def get_container_client():
         app.config["BLOB_CONNECTION_STRING"]
     )
     return blob_service.get_container_client(app.config["BLOB_CONTAINER"])
-
 
 imageSourceUrl = (
     "https://"
@@ -36,7 +34,7 @@ imageSourceUrl = (
 @app.route("/home")
 @login_required
 def home():
-    user = User.query.filter_by(username=current_user.username).first_or_404()
+    # user = User.query.filter_by(username=current_user.username).first_or_404()
     posts = Post.query.all()
     return render_template("index.html", title="Home Page", posts=posts)
 
@@ -73,7 +71,7 @@ def post(id):
         form=form,
     )
 
-
+# LOGIN Local and MS Authentication routes
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -94,40 +92,51 @@ def login():
     auth_url = _build_auth_url(scopes=Config.SCOPE, state=session["state"])
     return render_template("login.html", title="Sign In", form=form, auth_url=auth_url)
 
-
+# Microsoft Authentication redirect route
 @app.route(Config.REDIRECT_PATH)
 def authorized():
     if request.args.get("state") != session.get("state"):
-        return redirect(url_for("home"))
+        return redirect(url_for("login")) # change home to 
 
     if "error" in request.args:
         return render_template("auth_error.html", result=request.args)
 
-    if request.args.get("code"):
-        cache = _load_cache()
+    code = request.args.get("code")
+    if not code:
+        return redirect(url_for("login"))
 
-    # Acquire token using MSAL ConfidentialClientApplication
-        msal_app = _build_msal_app(cache=cache, authority=Config.AUTHORITY)
-        result = msal_app.acquire_token_by_authorization_code(
-            request.args["code"],
-            scopes=Config.SCOPE,
-            redirect_uri=url_for("authorized", _external=True),
-        )
+    cache = _load_cache()
+    msal_app = _build_msal_app(cache=cache)
 
-        if "error" in result:
-            return render_template("auth_error.html", result=result)
+    result = msal_app.acquire_token_by_authorization_code(
+        code,
+        scopes=Config.SCOPE,
+        redirect_uri=url_for("authorized", _external=True),
+    )
 
-        session["user"] = result.get("id_token_claims")
+    if "error" in result:
+        return render_template("auth_error.html", result=result)
 
-        # Using admin user for MS login
-        user = User.query.filter_by(username="admin").first()
-        login_user(user)
+    session["user"] = result.get("id_token_claims")
+    _save_cache(cache)
 
-        _save_cache(cache)
+    # Extract Microsoft account user email
+    ms_email = session["user"].get("preferred_username")
 
+        # Check if user exists
+    user = User.query.filter_by(username=ms_email).first()
+
+    # If not, create a new user
+    if not user:
+        user = User(username=ms_email)
+        user.set_password(uuid.uuid4().hex)  # random password
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
     return redirect(url_for("home"))
 
-
+# LOGOUT route
 @app.route("/logout")
 def logout():
     logout_user()
@@ -139,7 +148,6 @@ def logout():
             + "?post_logout_redirect_uri="
             + url_for("login", _external=True)
         )
-
     return redirect(url_for("login"))
 
 # Load MSAL token cache
@@ -153,7 +161,6 @@ def _load_cache():
 def _save_cache(cache):
     if cache.has_state_changed:
         session["token_cache"] = cache.serialize()
-
 
 # Build MSAL ConfidentialClientApplication
 def _build_msal_app(cache=None, authority=None):
