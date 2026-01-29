@@ -152,6 +152,11 @@ def logout():
         )
     return redirect(url_for("login"))
 
+# debug route to show redirect URI
+@app.route("/debug-redirect")
+def debug_redirect():
+    return url_for("authorized", _external=True)
+
 # Load MSAL token cache
 def _load_cache():
     cache = msal.SerializableTokenCache()
