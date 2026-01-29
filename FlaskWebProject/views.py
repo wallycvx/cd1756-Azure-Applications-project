@@ -87,7 +87,9 @@ def login():
         if not next_page or url_parse(next_page).netloc != "":
             next_page = url_for("home")
         return redirect(next_page)
-
+    
+    # Add this line to see the redirect URI Azure expects
+    print("PRODUCTION REDIRECT URI:", url_for("authorized", _external=True))
     session["state"] = str(uuid.uuid4())
     auth_url = _build_auth_url(scopes=Config.SCOPE, state=session["state"])
     return render_template("login.html", title="Sign In", form=form, auth_url=auth_url)
