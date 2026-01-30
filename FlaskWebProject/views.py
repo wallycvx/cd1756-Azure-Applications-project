@@ -29,7 +29,7 @@ imageSourceUrl = (
     + app.config["BLOB_CONTAINER"]
     + "/"
 )
-
+# Home page route
 @app.route("/")
 @app.route("/home")
 @login_required
@@ -38,6 +38,7 @@ def home():
     posts = Post.query.all()
     return render_template("index.html", title="Home Page", posts=posts)
 
+# New post route
 @app.route("/new_post", methods=["GET", "POST"])
 @login_required
 def new_post():
@@ -54,7 +55,7 @@ def new_post():
         imageSource=imageSourceUrl,
         form=form,
     )
-
+# Edit post route
 @app.route("/post/<int:id>", methods=["GET", "POST"])
 @login_required
 def post(id):
@@ -88,8 +89,9 @@ def login():
             next_page = url_for("home")
         return redirect(next_page)
     
-    # Add this line to see the redirect URI Azure expects
-    print("PRODUCTION REDIRECT URI:", url_for("authorized", _external=True))
+    # Add this line to show the redirect URI Azure expects in logs
+    # print("PRODUCTION REDIRECT URI:", url_for("authorized", _external=True))
+    app.logger.info(f"PRODUCTION REDIRECT URI: {url_for('authorized', _external=True)}")
     session["state"] = str(uuid.uuid4())
     auth_url = _build_auth_url(scopes=Config.SCOPE, state=session["state"])
     return render_template("login.html", title="Sign In", form=form, auth_url=auth_url)
@@ -134,6 +136,9 @@ def authorized():
         user.set_password(uuid.uuid4().hex)  # random password
         db.session.add(user)
         db.session.commit()
+        app.logger.info(f"New Microsoft user created: {ms_email}")
+    else:
+        app.logger.info(f"Microsoft user logged in: {ms_email}")
 
     login_user(user)
     return redirect(url_for("home"))
@@ -141,7 +146,11 @@ def authorized():
 # LOGOUT route
 @app.route("/logout")
 def logout():
+    if current_user.is_authenticated:
+        app.logger.info(f"User '{current_user.username}' logged out")
+
     logout_user()
+
     if session.get("user"):
         session.clear()
         return redirect(
