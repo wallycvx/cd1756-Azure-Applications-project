@@ -78,19 +78,23 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     form = LoginForm()
+
+    # Local authentication
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
+            app.logger.warning(f"Invalid login attempt for username: {form.username.data}")
             flash("Invalid username or password")
             return redirect(url_for("login"))
+        
         login_user(user, remember=form.remember_me.data)
+        app.logger.info(f"User '{user.username}' logged in successfully via local login")
         next_page = request.args.get("next")
         if not next_page or url_parse(next_page).netloc != "":
             next_page = url_for("home")
         return redirect(next_page)
     
     # Add this line to show the redirect URI Azure expects in logs
-    # print("PRODUCTION REDIRECT URI:", url_for("authorized", _external=True))
     app.logger.info(f"PRODUCTION REDIRECT URI: {url_for('authorized', _external=True)}")
     session["state"] = str(uuid.uuid4())
     auth_url = _build_auth_url(scopes=Config.SCOPE, state=session["state"])
@@ -100,13 +104,20 @@ def login():
 @app.route(Config.REDIRECT_PATH)
 def authorized():
     if request.args.get("state") != session.get("state"):
-        return redirect(url_for("login")) # change home to 
+        app.logger.warning("Microsoft login failed: state mismatch")
+        return redirect(url_for("login")) 
 
+    # Handle error from Microsoft
     if "error" in request.args:
+        app.logger.warning(
+            f"Microsoft login error: {request.args.get('error')} - "
+            f"{request.args.get('error_description')}"
+        )
         return render_template("auth_error.html", result=request.args)
 
     code = request.args.get("code")
     if not code:
+        app.logger.warning("Microsoft login failed: no authorization code returned")
         return redirect(url_for("login"))
 
     cache = _load_cache()
@@ -117,17 +128,22 @@ def authorized():
         scopes=Config.SCOPE,
         redirect_uri=url_for("authorized", _external=True),
     )
-
+    # Handle token acquisition error
     if "error" in result:
+        app.logger.warning(
+            f"Microsoft token acquisition failed: {result.get('error')} - "
+            f"{result.get('error_description')}"
+        )
         return render_template("auth_error.html", result=result)
-
+    
+    # Successful MS login
     session["user"] = result.get("id_token_claims")
     _save_cache(cache)
 
     # Extract Microsoft account user email
     ms_email = session["user"].get("preferred_username")
 
-        # Check if user exists
+    # Check if user exists
     user = User.query.filter_by(username=ms_email).first()
 
     # If not, create a new user
@@ -138,7 +154,7 @@ def authorized():
         db.session.commit()
         app.logger.info(f"New Microsoft user created: {ms_email}")
     else:
-        app.logger.info(f"Microsoft user logged in: {ms_email}")
+        app.logger.info(f"Microsoft user logged in successfully: {ms_email}")
 
     login_user(user)
     return redirect(url_for("home"))
